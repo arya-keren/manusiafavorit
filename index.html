@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Untuk Manusia Favoritku</title>
+    <style>
+        body { margin: 0; background: #020205; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background 2s; }
+        
+        /* UI Overlay Umum */
+        .overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; color: white; z-index: 100; transition: opacity 1s ease-in-out;
+        }
+
+        /* Hiasan Halaman Awal dengan Gradasi Mesh Bergerak */
+        #start-ui {
+            width: 100vw; height: 100vh;
+            background: linear-gradient(125deg, #020205 0%, #050a24 40%, #1a0524 70%, #020205 100%);
+            background-size: 400% 400%;
+            animation: gradientMesh 15s ease infinite;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        @keyframes gradientMesh {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        #start-ui h1 { font-weight: 300; letter-spacing: 3px; margin-bottom: 30px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 255, 255, 0.4); }
+        
+        input {
+            padding: 18px 25px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05); color: white; font-size: 16px; width: 280px; text-align: center;
+            outline: none; transition: 0.3s; backdrop-filter: blur(10px);
+            box-shadow: inset 0 0 15px rgba(255,255,255,0.05);
+        }
+        input:focus { border: 1px solid #ff0077; box-shadow: 0 0 20px rgba(255, 0, 119, 0.3); }
+        
+        button {
+            margin-top: 25px; padding: 15px 40px; cursor: pointer; background: transparent;
+            color: white; border: 1px solid white; border-radius: 50px; font-size: 15px;
+            transition: all 0.3s; letter-spacing: 2px; backdrop-filter: blur(5px);
+            text-transform: uppercase;
+        }
+        button:hover { background: white; color: black; box-shadow: 0 0 30px rgba(255,255,255,0.6); }
+
+        #next-ui, #blow-ui, #reset-ui { display: none; top: 85%; }
+        
+        #tiup-lagi {
+            color: #ffaa00; font-size: 14px; margin-bottom: 5px; opacity: 0; transition: opacity 0.5s;
+            text-shadow: 0 0 5px #ff0000; letter-spacing: 1px;
+        }
+
+        #instruction {
+            position: absolute; top: 20px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.2); font-size: 12px; z-index: 50; pointer-events: none;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="start-ui" class="overlay">
+    <h1>Nama kamu siapa?</h1>
+    <input type="text" id="nameInput" placeholder="Ketik namamu..." autocomplete="off"><br>
+    <button onclick="startExperience()">Buka Pesan</button>
+</div>
+
+<div id="next-ui" class="overlay"><button onclick="nextStory()">Lanjut</button></div>
+<div id="blow-ui" class="overlay">
+    <div id="tiup-lagi">Ayo tiup lagi...</div>
+    <button onclick="blowCandles()">Tiup Lilin</button>
+</div>
+<div id="reset-ui" class="overlay"><button onclick="location.reload()">Ulangi Dari Awal</button></div>
+
+<div id="instruction">Sentuh dan geser layar untuk memutar sudut pandang</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+let scene, camera, renderer, particles, controls;
+const particleCount = 35000; 
+let targetPositions = new Float32Array(particleCount * 3);
+let currentPositions = new Float32Array(particleCount * 3);
+let velocities = new Float32Array(particleCount * 3);
+let particleColors = new Float32Array(particleCount * 3);
+
+let isFireworks = false;
+let userName = "";
+let currentStep = 0;
+let story = [];
+let blowCount = 0;
+let isCakeMode = false;
+let flameIndices = [];
+
+// STEP 1: VARIABEL KONTROL UNTUK TEMA BARU
+let isFinalMode = false; // Flag untuk mode penutup
+const COLOR_RED_HEART = { r: 0.8, g: 0.0, b: 0.1 }; // Warna Merah Hati (Merah Crimson/Maroon)
+
+function init3D() {
+    scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x020205, 0.0015);
+
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+    camera.position.set(0, 25, 170);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.6; 
+
+    const geo = new THREE.BufferGeometry();
+    for (let i = 0; i < particleCount * 3; i+=3) {
+        currentPositions[i] = (Math.random() - 0.5) * 1500;
+        currentPositions[i+1] = (Math.random() - 0.5) * 1500;
+        currentPositions[i+2] = (Math.random() - 0.5) * 1500;
+        targetPositions[i] = currentPositions[i];
+        targetPositions[i+1] = currentPositions[i+1];
+        targetPositions[i+2] = currentPositions[i+2];
+
+        // Warna awal sendu
+        particleColors[i] = 0.0; particleColors[i+1] = 0.6; particleColors[i+2] = 0.9;
+    }
+
+    geo.setAttribute('position', new THREE.BufferAttribute(currentPositions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+    
+    const mat = new THREE.PointsMaterial({ 
+        size: 0.85, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, vertexColors: true 
+    });
+    
+    particles = new THREE.Points(geo, mat);
+    scene.add(particles);
+    animate();
+}
+
+function textToParticles(text, scale = 1) {
+    isCakeMode = false;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 1500; canvas.height = 300;
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    let fontSize = isFinalMode ? 100 : 90; // Mode akhir sedikit lebih besar
+    ctx.font = `bold ${fontSize}px "Segoe UI"`;
+    while(ctx.measureText(text).width > canvas.width - 150 && fontSize > 30) {
+        fontSize -= 5;
+        ctx.font = `bold ${fontSize}px "Segoe UI"`;
+    }
+
+    ctx.fillStyle = '#fff'; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let targets = [];
+    for (let y = 0; y < canvas.height; y += 2) {
+        for (let x = 0; x < canvas.width; x += 2) {
+            if (data[(y * canvas.width + x) * 4] > 128) {
+                targets.push((x - canvas.width / 2) * 0.23 * scale, -(y - canvas.height / 2) * 0.23 * scale, (Math.random() - 0.5) * 3);
+            }
+        }
+    }
+    applyTargets(targets);
+}
+
+function create3DCake() {
+    isCakeMode = true; flameIndices = [];
+    let targets = [], colors = [];
+
+    function addCyl(radius, height, yOff, color) {
+        let count = radius * height * 2.5; 
+        for(let i=0; i<count; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const y = (Math.random() * height) + yOff;
+            targets.push(radius * Math.cos(theta), y, radius * Math.sin(theta));
+            colors.push(color.r, color.g, color.b);
+        }
+    }
+
+    // Kue tetap Nuansa Biru (Bertahan sesuai permintaan)
+    addCyl(35, 20, -15, {r:0.0, g:0.6, b:0.9}); // Bawah
+    addCyl(20, 15, 5, {r:0.0, g:0.6, b:0.9});   // Atas
+    addCyl(1.5, 10, 20, {r:1, g:1, b:1}); // Lilin putih
+
+    // Api
+    for(let i=0; i<150; i++) {
+        flameIndices.push(targets.length/3);
+        targets.push((Math.random()-0.5)*1.5, 31 + Math.random()*5, (Math.random()-0.5)*1.5);
+        colors.push(1.0, 0.5, 0.0); // Orange Api
+    }
+    applyTargets(targets, colors);
+}
+
+// STEP 2: LOGIKA PENERAPAN WARNA (DIPERBARUI)
+function applyTargets(newTargets, customColors = null) {
+    const targetLength = newTargets.length / 3;
+    const colors = particles.geometry.attributes.color.array;
+
+    for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
+        if (i < targetLength) {
+            const t3 = (i % targetLength) * 3;
+            targetPositions[i3] = newTargets[t3];
+            targetPositions[i3+1] = newTargets[t3 + 1];
+            targetPositions[i3+2] = newTargets[t3 + 2];
+
+            if (customColors) {
+                // Warna kustom (Api/Kue saat ini)
+                colors[i3] = customColors[t3]; colors[i3+1] = customColors[t3+1]; colors[i3+2] = customColors[t3+2];
+            } else if (isFinalMode) {
+                // BARU: Mode Akhir Teks berwarna Merah Hati Solid
+                colors[i3] = COLOR_RED_HEART.r; colors[i3+1] = COLOR_RED_HEART.g; colors[i3+2] = COLOR_RED_HEART.b;
+            } else {
+                // Mode Cerita Awal: Teks Biru (Bertahan)
+                colors[i3] = 0.0; colors[i3+1] = 0.6; colors[i3+2] = 0.9;
+            }
+        } else {
+            // Sisa partikel terbang
+            targetPositions[i3] = (Math.random() - 0.5) * 1000;
+            targetPositions[i3+1] = (Math.random() - 0.5) * 1000;
+            targetPositions[i3+2] = (Math.random() - 0.5) * 1000;
+            
+            if (isFinalMode) {
+                // BARU: Mode Akhir Sekeliling Warna-Warni
+                colors[i3] = Math.random(); colors[i3+1] = Math.random(); colors[i3+2] = Math.random();
+            } else {
+                // Mode Cerita Awal: Biru gelap sendu (Bertahan)
+                colors[i3] = 0.0; colors[i3+1] = 0.1; colors[i3+2] = 0.3;
+            }
+        }
+    }
+    particles.geometry.attributes.color.needsUpdate = true;
+}
+
+let time = 0;
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    time += 0.1;
+
+    const positions = particles.geometry.attributes.position.array;
+
+    if (!isFireworks) {
+        for (let i = 0; i < particleCount * 3; i++) {
+            positions[i] += (targetPositions[i] - positions[i]) * 0.035; 
+        }
+        // Api Bergetar
+        if (isCakeMode && flameIndices.length > 0) {
+            const flameIntensity = blowCount === 0 ? 1 : (blowCount === 1 ? 0.6 : 0.3);
+            for (let i = 0; i < flameIndices.length; i++) {
+                const idx = flameIndices[i] * 3;
+                positions[idx] += Math.sin(time + i) * 0.15 * flameIntensity;
+                positions[idx+2] += Math.cos(time + i) * 0.15 * flameIntensity;
+            }
+        }
+    } else {
+        // Kembang Api Fisika (Warna kembang api di blowCandles)
+        for (let i = 0; i < particleCount; i++) {
+            const i3 = i * 3;
+            positions[i3] += velocities[i3];
+            positions[i3+1] += velocities[i3+1];
+            positions[i3+2] += velocities[i3+2];
+            velocities[i3+1] -= 0.025; // Gravitasi
+        }
+    }
+
+    particles.geometry.attributes.position.needsUpdate = true;
+    renderer.render(scene, camera);
+}
+
+function startExperience() {
+    userName = document.getElementById('nameInput').value.trim() || "Favoritku";
+    story = [
+        `Halo, ${userName}.`, "Hari ini sangat spesial.", "Untuk seseorang yang selalu bersinar.",
+        "Bintang paling terang yang pernah kutemui.", "Yang hanya bisa kupandang dari kejauhan.",
+        "Tanpa pernah berani berharap untuk kugenggam.", "Melihatmu bahagia sudah cukup bagiku.",
+        "Selamat ulang tahun ke-17.", "Manusia favoritku."
+    ];
+    document.getElementById('start-ui').style.opacity = '0';
+    setTimeout(() => { document.getElementById('start-ui').style.display = 'none'; init3D(); showStoryStep(); }, 1000);
+}
+
+function showStoryStep() {
+    textToParticles(story[currentStep]);
+    const nextBtn = document.getElementById('next-ui');
+    nextBtn.style.display = 'none';
+    setTimeout(() => { nextBtn.style.display = 'block'; setTimeout(() => nextBtn.style.opacity = '1', 50); }, 2500);
+}
+
+function nextStory() {
+    document.getElementById('next-ui').style.opacity = '0';
+    if (currentStep < story.length - 1) {
+        currentStep++; setTimeout(showStoryStep, 600); 
+    } else {
+        // Tampilkan Kue 3D (Bertahan nuansa biru)
+        setTimeout(() => {
+            create3DCake();
+            const blowBtn = document.getElementById('blow-ui');
+            blowBtn.style.display = 'block';
+            setTimeout(() => blowBtn.style.opacity = '1', 3000);
+        }, 600);
+    }
+}
+
+// STEP 3: LOGIKA TIUP LILIN & TRANSISI AKHIR (DIPERBARUI)
+function blowCandles() {
+    blowCount++;
+    if (blowCount < 3) {
+        document.getElementById('tiup-lagi').style.opacity = '1';
+        // Efek angin lilin bergetar (bertahan)
+        const positions = particles.geometry.attributes.position.array;
+        for (let i = 0; i < flameIndices.length; i++) {
+            const idx = flameIndices[i] * 3;
+            positions[idx+1] -= 1.5; 
+        }
+    } else if (blowCount === 3) {
+        document.getElementById('blow-ui').style.opacity = '0';
+        setTimeout(() => document.getElementById('blow-ui').style.display = 'none', 1000);
+
+        // MODE KEMBANG API (Mode transisi warna-warni bertahan)
+        isFireworks = true;
+        for (let i = 0; i < particleCount; i++) {
+            const i3 = i * 3;
+            const speed = (Math.random() * 5.5) + 2;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos((Math.random() * 2) - 1);
+            velocities[i3] = speed * Math.sin(phi) * Math.cos(theta);
+            velocities[i3+1] = speed * Math.sin(phi) * Math.sin(theta) + 2.5; 
+            velocities[i3+2] = speed * Math.cos(phi);
+
+            // Warna Kembang Api Warna-warni
+            particles.geometry.attributes.color.array[i3] = Math.random();
+            particles.geometry.attributes.color.array[i3+1] = Math.random();
+            particles.geometry.attributes.color.array[i3+2] = Math.random();
+        }
+        particles.geometry.attributes.color.needsUpdate = true;
+
+        // --- STEP 4: SESI AKHIR YANG BARU ---
+        setTimeout(() => {
+            isFireworks = false;
+            isFinalMode = true; // Aktifkan mode penutup (memicu applyTargets warna baru)
+            
+            // 1. Ubah Background jadi HITAM TOTAL
+            document.body.style.background = "#000000"; // Hitam
+            scene.fog.color.setHex(0x000000); // Kabut hitam agar menyatu
+
+            // 2. Hilangkan semua partikel sejenak
+            for(let i=0; i<particleCount*3; i++) currentPositions[i] = (Math.random() - 0.5) * 5000;
+            particles.geometry.attributes.position.array.set(currentPositions);
+            particles.geometry.attributes.position.needsUpdate = true;
+
+            // 3. Membentuk kata penutup MERAH HATI di Sekeliling WARNA-WARNI
+            setTimeout(() => textToParticles(`Sweet Seventeen ${userName}`, 1.2), 500);
+            
+            // 4. Doa Akhir (Juga Merah Hati)
+            setTimeout(() => textToParticles("Semoga Sehat Selalu", 1.2), 6500);
+
+            // 5. Munculkan Tombol ULANGI (Bertahan)
+            setTimeout(() => {
+                const resetBtn = document.getElementById('reset-ui');
+                resetBtn.style.display = 'block';
+                setTimeout(() => resetBtn.style.opacity = '1', 100);
+            }, 10000);
+
+        }, 4500); // Kembang api berlangsung 4.5 detik
+    }
+}
+
+window.addEventListener('resize', () => {
+    if(camera && renderer) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+});
+</script>
+</body>
+</html>
