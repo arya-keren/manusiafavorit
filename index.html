@@ -13,7 +13,6 @@
             text-align: center; color: white; z-index: 100; transition: opacity 1s ease-in-out;
         }
 
-        /* Hiasan Halaman Awal dengan Gradasi Mesh Bergerak */
         #start-ui {
             width: 100vw; height: 100vh;
             background: linear-gradient(125deg, #020205 0%, #050a24 40%, #1a0524 70%, #020205 100%);
@@ -38,13 +37,13 @@
         }
         input:focus { border: 1px solid #ff0077; box-shadow: 0 0 20px rgba(255, 0, 119, 0.3); }
         
-        button {
+        button.btn-main {
             margin-top: 25px; padding: 15px 40px; cursor: pointer; background: transparent;
             color: white; border: 1px solid white; border-radius: 50px; font-size: 15px;
             transition: all 0.3s; letter-spacing: 2px; backdrop-filter: blur(5px);
             text-transform: uppercase;
         }
-        button:hover { background: white; color: black; box-shadow: 0 0 30px rgba(255,255,255,0.6); }
+        button.btn-main:hover { background: white; color: black; box-shadow: 0 0 30px rgba(255,255,255,0.6); }
 
         #next-ui, #blow-ui, #reset-ui { display: none; top: 85%; }
         
@@ -58,31 +57,81 @@
             color: rgba(255,255,255,0.2); font-size: 12px; z-index: 50; pointer-events: none;
             letter-spacing: 1px;
         }
+
+        /* ----- MUSIC PLAYER BOX ----- */
+        #music-player {
+            position: fixed; bottom: 25px; right: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px; padding: 15px;
+            display: flex; align-items: center; gap: 15px;
+            color: white; z-index: 1000;
+            opacity: 0; pointer-events: none; transition: opacity 1s, border 1s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        #music-player.final-mode {
+            border: 1px solid rgba(204, 0, 51, 0.4); /* Nuansa merah saat akhir */
+        }
+        .cover-art {
+            width: 50px; height: 50px; border-radius: 8px;
+            background: linear-gradient(45deg, #1a0524, #ff0077); /* Cover placeholder */
+            display: flex; justify-content: center; align-items: center;
+            font-size: 10px; font-weight: bold; overflow: hidden;
+        }
+        .cover-art img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .song-info { display: flex; flex-direction: column; width: 120px; }
+        .song-title { font-size: 14px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .song-artist { font-size: 11px; color: rgba(255,255,255,0.6); }
+        .controls { display: flex; gap: 10px; align-items: center; }
+        .ctrl-btn {
+            background: none; border: none; color: white; cursor: pointer;
+            font-size: 16px; transition: transform 0.2s, color 0.2s; padding: 5px;
+        }
+        .ctrl-btn:hover { transform: scale(1.1); color: #ff0077; }
+        .ctrl-btn.play-pause { font-size: 22px; }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
 <div id="start-ui" class="overlay">
     <h1>Nama kamu siapa?</h1>
     <input type="text" id="nameInput" placeholder="Ketik namamu..." autocomplete="off"><br>
-    <button onclick="startExperience()">Buka Pesan</button>
+    <button class="btn-main" onclick="startExperience()">Buka Pesan</button>
 </div>
 
-<div id="next-ui" class="overlay"><button onclick="nextStory()">Lanjut</button></div>
+<div id="next-ui" class="overlay"><button class="btn-main" onclick="nextStory()">Lanjut</button></div>
 <div id="blow-ui" class="overlay">
     <div id="tiup-lagi">Ayo tiup lagi...</div>
-    <button onclick="blowCandles()">Tiup Lilin</button>
+    <button class="btn-main" onclick="blowCandles()">Tiup Lilin</button>
 </div>
-<div id="reset-ui" class="overlay"><button onclick="location.reload()">Ulangi Dari Awal</button></div>
+<div id="reset-ui" class="overlay"><button class="btn-main" onclick="location.reload()">Ulangi Dari Awal</button></div>
 
 <div id="instruction">Sentuh dan geser layar untuk memutar sudut pandang</div>
+
+<div id="music-player">
+    <div class="cover-art">
+        <i class="fas fa-music"></i>
+    </div>
+    <div class="song-info">
+        <span class="song-title">Bahagia Lagi</span>
+        <span class="song-artist">Piche Kota</span>
+    </div>
+    <div class="controls">
+        <button class="ctrl-btn" onclick="prevSong()"><i class="fas fa-step-backward"></i></button>
+        <button class="ctrl-btn play-pause" onclick="togglePlay()" id="playBtn"><i class="fas fa-play"></i></button>
+        <button class="ctrl-btn" onclick="nextSong()"><i class="fas fa-step-forward"></i></button>
+    </div>
+    <audio id="bgm" src="lagu.mp4" loop></audio>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
 let scene, camera, renderer, particles, controls;
-const particleCount = 35000; 
+const particleCount = 40000; // Ditambah sedikit untuk dekorasi kue
 let targetPositions = new Float32Array(particleCount * 3);
 let currentPositions = new Float32Array(particleCount * 3);
 let velocities = new Float32Array(particleCount * 3);
@@ -96,16 +145,34 @@ let blowCount = 0;
 let isCakeMode = false;
 let flameIndices = [];
 
-// STEP 1: VARIABEL KONTROL UNTUK TEMA BARU
-let isFinalMode = false; // Flag untuk mode penutup
-const COLOR_RED_HEART = { r: 0.8, g: 0.0, b: 0.1 }; // Warna Merah Hati (Merah Crimson/Maroon)
+let isFinalMode = false; 
+const COLOR_RED_HEART = { r: 0.8, g: 0.0, b: 0.1 }; 
+
+// MUSIC PLAYER LOGIC
+const audioPlayer = document.getElementById('bgm');
+const playBtn = document.getElementById('playBtn');
+let isPlaying = false;
+
+function togglePlay() {
+    if(isPlaying) {
+        audioPlayer.pause();
+        playBtn.innerHTML = '<i class="fas fa-play"></i>';
+    } else {
+        // Handle error jika file tidak ada
+        audioPlayer.play().catch(e => console.log("Audio belum dimasukkan/diblokir browser."));
+        playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+    }
+    isPlaying = !isPlaying;
+}
+function nextSong() { alert("Fitur next song bisa ditambahkan nanti!"); }
+function prevSong() { audioPlayer.currentTime = 0; }
 
 function init3D() {
     scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x020205, 0.0015);
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
-    camera.position.set(0, 25, 170);
+    camera.position.set(0, 35, 180); // Kamera sedikit lebih tinggi agar atas kue terlihat jelas
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -116,6 +183,7 @@ function init3D() {
     controls.enableDamping = true;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 0.6; 
+    controls.maxPolarAngle = Math.PI / 2 + 0.2; // Jangan biarkan tembus terlalu jauh ke bawah
 
     const geo = new THREE.BufferGeometry();
     for (let i = 0; i < particleCount * 3; i+=3) {
@@ -126,7 +194,6 @@ function init3D() {
         targetPositions[i+1] = currentPositions[i+1];
         targetPositions[i+2] = currentPositions[i+2];
 
-        // Warna awal sendu
         particleColors[i] = 0.0; particleColors[i+1] = 0.6; particleColors[i+2] = 0.9;
     }
 
@@ -149,7 +216,7 @@ function textToParticles(text, scale = 1) {
     canvas.width = 1500; canvas.height = 300;
     ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    let fontSize = isFinalMode ? 100 : 90; // Mode akhir sedikit lebih besar
+    let fontSize = isFinalMode ? 100 : 90; 
     ctx.font = `bold ${fontSize}px "Segoe UI"`;
     while(ctx.measureText(text).width > canvas.width - 150 && fontSize > 30) {
         fontSize -= 5;
@@ -175,22 +242,50 @@ function create3DCake() {
     isCakeMode = true; flameIndices = [];
     let targets = [], colors = [];
 
-    function addCyl(radius, height, yOff, color) {
-        let count = radius * height * 2.5; 
+    // Fungsi silinder dengan PENUTUP ATAS
+    function addCyl(radius, height, yOff, color, hasTop = true) {
+        let count = radius * height * 3.5; // Kepadatan ditingkatkan
         for(let i=0; i<count; i++) {
+            // 30% kemungkinan partikel diletakkan di bagian atas/atap silinder
+            const isTop = hasTop && Math.random() < 0.3; 
+            const r = isTop ? Math.sqrt(Math.random()) * radius : radius;
             const theta = Math.random() * Math.PI * 2;
-            const y = (Math.random() * height) + yOff;
-            targets.push(radius * Math.cos(theta), y, radius * Math.sin(theta));
+            const y = isTop ? height + yOff : (Math.random() * height) + yOff;
+            targets.push(r * Math.cos(theta), y, r * Math.sin(theta));
             colors.push(color.r, color.g, color.b);
         }
     }
 
-    // Kue tetap Nuansa Biru (Bertahan sesuai permintaan)
-    addCyl(35, 20, -15, {r:0.0, g:0.6, b:0.9}); // Bawah
-    addCyl(20, 15, 5, {r:0.0, g:0.6, b:0.9});   // Atas
-    addCyl(1.5, 10, 20, {r:1, g:1, b:1}); // Lilin putih
+    // Fungsi Dekorasi Krim/Ceri di pinggiran
+    function addDecoration(radius, yOff, color, countDots) {
+        for(let i=0; i<countDots; i++) {
+            const angle = (i / countDots) * Math.PI * 2;
+            const cx = radius * Math.cos(angle);
+            const cz = radius * Math.sin(angle);
+            // Buat gerombolan partikel kecil (bola krim)
+            for(let j=0; j<20; j++) {
+                const tr = Math.random() * 2;
+                const ta = Math.random() * Math.PI * 2;
+                const ty = (Math.random() - 0.5) * 2;
+                targets.push(cx + tr*Math.cos(ta), yOff + ty, cz + tr*Math.sin(ta));
+                colors.push(color.r, color.g, color.b);
+            }
+        }
+    }
 
-    // Api
+    // Kue Tingkat 1
+    addCyl(35, 20, -15, {r:0.0, g:0.6, b:0.9}); 
+    addDecoration(35, -15, {r:1.0, g:0.8, b:0.9}, 24); // Dekorasi bawah
+    addDecoration(35, 5, {r:1.0, g:0.8, b:0.9}, 24);   // Dekorasi pinggiran atas tier 1
+
+    // Kue Tingkat 2
+    addCyl(20, 15, 5, {r:0.0, g:0.6, b:0.9});   
+    addDecoration(20, 20, {r:1.0, g:0.8, b:0.9}, 16);  // Dekorasi pinggiran atas tier 2
+
+    // Lilin
+    addCyl(1.5, 10, 20, {r:1, g:1, b:1}, true); 
+
+    // Api Lilin
     for(let i=0; i<150; i++) {
         flameIndices.push(targets.length/3);
         targets.push((Math.random()-0.5)*1.5, 31 + Math.random()*5, (Math.random()-0.5)*1.5);
@@ -199,7 +294,6 @@ function create3DCake() {
     applyTargets(targets, colors);
 }
 
-// STEP 2: LOGIKA PENERAPAN WARNA (DIPERBARUI)
 function applyTargets(newTargets, customColors = null) {
     const targetLength = newTargets.length / 3;
     const colors = particles.geometry.attributes.color.array;
@@ -213,26 +307,20 @@ function applyTargets(newTargets, customColors = null) {
             targetPositions[i3+2] = newTargets[t3 + 2];
 
             if (customColors) {
-                // Warna kustom (Api/Kue saat ini)
                 colors[i3] = customColors[t3]; colors[i3+1] = customColors[t3+1]; colors[i3+2] = customColors[t3+2];
             } else if (isFinalMode) {
-                // BARU: Mode Akhir Teks berwarna Merah Hati Solid
                 colors[i3] = COLOR_RED_HEART.r; colors[i3+1] = COLOR_RED_HEART.g; colors[i3+2] = COLOR_RED_HEART.b;
             } else {
-                // Mode Cerita Awal: Teks Biru (Bertahan)
                 colors[i3] = 0.0; colors[i3+1] = 0.6; colors[i3+2] = 0.9;
             }
         } else {
-            // Sisa partikel terbang
             targetPositions[i3] = (Math.random() - 0.5) * 1000;
             targetPositions[i3+1] = (Math.random() - 0.5) * 1000;
             targetPositions[i3+2] = (Math.random() - 0.5) * 1000;
             
             if (isFinalMode) {
-                // BARU: Mode Akhir Sekeliling Warna-Warni
                 colors[i3] = Math.random(); colors[i3+1] = Math.random(); colors[i3+2] = Math.random();
             } else {
-                // Mode Cerita Awal: Biru gelap sendu (Bertahan)
                 colors[i3] = 0.0; colors[i3+1] = 0.1; colors[i3+2] = 0.3;
             }
         }
@@ -252,7 +340,6 @@ function animate() {
         for (let i = 0; i < particleCount * 3; i++) {
             positions[i] += (targetPositions[i] - positions[i]) * 0.035; 
         }
-        // Api Bergetar
         if (isCakeMode && flameIndices.length > 0) {
             const flameIntensity = blowCount === 0 ? 1 : (blowCount === 1 ? 0.6 : 0.3);
             for (let i = 0; i < flameIndices.length; i++) {
@@ -262,13 +349,12 @@ function animate() {
             }
         }
     } else {
-        // Kembang Api Fisika (Warna kembang api di blowCandles)
         for (let i = 0; i < particleCount; i++) {
             const i3 = i * 3;
             positions[i3] += velocities[i3];
             positions[i3+1] += velocities[i3+1];
             positions[i3+2] += velocities[i3+2];
-            velocities[i3+1] -= 0.025; // Gravitasi
+            velocities[i3+1] -= 0.025; 
         }
     }
 
@@ -285,6 +371,13 @@ function startExperience() {
         "Selamat ulang tahun ke-17.", "Manusia favoritku."
     ];
     document.getElementById('start-ui').style.opacity = '0';
+    
+    // Tampilkan Music Player dan Mulai Lagu
+    const playerUI = document.getElementById('music-player');
+    playerUI.style.opacity = '1';
+    playerUI.style.pointerEvents = 'auto';
+    togglePlay(); // Otomatis mulai play (tergantung izin browser)
+
     setTimeout(() => { document.getElementById('start-ui').style.display = 'none'; init3D(); showStoryStep(); }, 1000);
 }
 
@@ -300,7 +393,6 @@ function nextStory() {
     if (currentStep < story.length - 1) {
         currentStep++; setTimeout(showStoryStep, 600); 
     } else {
-        // Tampilkan Kue 3D (Bertahan nuansa biru)
         setTimeout(() => {
             create3DCake();
             const blowBtn = document.getElementById('blow-ui');
@@ -310,12 +402,10 @@ function nextStory() {
     }
 }
 
-// STEP 3: LOGIKA TIUP LILIN & TRANSISI AKHIR (DIPERBARUI)
 function blowCandles() {
     blowCount++;
     if (blowCount < 3) {
         document.getElementById('tiup-lagi').style.opacity = '1';
-        // Efek angin lilin bergetar (bertahan)
         const positions = particles.geometry.attributes.position.array;
         for (let i = 0; i < flameIndices.length; i++) {
             const idx = flameIndices[i] * 3;
@@ -325,7 +415,6 @@ function blowCandles() {
         document.getElementById('blow-ui').style.opacity = '0';
         setTimeout(() => document.getElementById('blow-ui').style.display = 'none', 1000);
 
-        // MODE KEMBANG API (Mode transisi warna-warni bertahan)
         isFireworks = true;
         for (let i = 0; i < particleCount; i++) {
             const i3 = i * 3;
@@ -336,41 +425,36 @@ function blowCandles() {
             velocities[i3+1] = speed * Math.sin(phi) * Math.sin(theta) + 2.5; 
             velocities[i3+2] = speed * Math.cos(phi);
 
-            // Warna Kembang Api Warna-warni
             particles.geometry.attributes.color.array[i3] = Math.random();
             particles.geometry.attributes.color.array[i3+1] = Math.random();
             particles.geometry.attributes.color.array[i3+2] = Math.random();
         }
         particles.geometry.attributes.color.needsUpdate = true;
 
-        // --- STEP 4: SESI AKHIR YANG BARU ---
         setTimeout(() => {
             isFireworks = false;
-            isFinalMode = true; // Aktifkan mode penutup (memicu applyTargets warna baru)
+            isFinalMode = true; 
             
-            // 1. Ubah Background jadi HITAM TOTAL
-            document.body.style.background = "#000000"; // Hitam
-            scene.fog.color.setHex(0x000000); // Kabut hitam agar menyatu
+            document.body.style.background = "#000000"; 
+            scene.fog.color.setHex(0x000000); 
+            
+            // Ubah aksen Music Player jadi merah hati
+            document.getElementById('music-player').classList.add('final-mode');
 
-            // 2. Hilangkan semua partikel sejenak
             for(let i=0; i<particleCount*3; i++) currentPositions[i] = (Math.random() - 0.5) * 5000;
             particles.geometry.attributes.position.array.set(currentPositions);
             particles.geometry.attributes.position.needsUpdate = true;
 
-            // 3. Membentuk kata penutup MERAH HATI di Sekeliling WARNA-WARNI
             setTimeout(() => textToParticles(`Sweet Seventeen ${userName}`, 1.2), 500);
-            
-            // 4. Doa Akhir (Juga Merah Hati)
             setTimeout(() => textToParticles("Semoga Sehat Selalu", 1.2), 6500);
 
-            // 5. Munculkan Tombol ULANGI (Bertahan)
             setTimeout(() => {
                 const resetBtn = document.getElementById('reset-ui');
                 resetBtn.style.display = 'block';
                 setTimeout(() => resetBtn.style.opacity = '1', 100);
             }, 10000);
 
-        }, 4500); // Kembang api berlangsung 4.5 detik
+        }, 4500); 
     }
 }
 
