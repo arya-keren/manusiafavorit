@@ -60,7 +60,7 @@
 
         /* ----- MUSIC PLAYER BOX (KANAN BAWAH) ----- */
         #music-player {
-            position: fixed; bottom: 25px; right: 25px; /* POJOK KANAN */
+            position: fixed; bottom: 25px; right: 25px;
             background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 15px;
             display: flex; align-items: center; gap: 15px; color: white; z-index: 1000;
@@ -93,7 +93,7 @@
             position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%);
             background: rgba(20, 0, 5, 0.9); padding: 10px; border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            display: none; /* Disembunyikan secara default */
+            display: none;
             z-index: 1010;
         }
         #volume-popover.show { display: block; }
@@ -120,7 +120,7 @@
         /* ----- BUBBLE SURAT KIRI ATAS ----- */
         #msg-bubble {
             position: fixed; top: 25px; left: 25px; width: 65px; height: 65px;
-            background: #800020; /* Warna Merah Hati */ border-radius: 50%;
+            background: #800020; border-radius: 50%;
             display: none; justify-content: center; align-items: center; 
             color: white; font-size: 26px; cursor: pointer; z-index: 1000; 
             box-shadow: 0 0 20px rgba(128, 0, 32, 0.7); border: 2px solid #ff4d6d; 
@@ -146,8 +146,7 @@
         }
         #note-card {
             background: linear-gradient(135deg, #2b0008, #4a0010);
-            width: 85%; max-width: 700px; /* Bentuk Horizontal */
-            padding: 40px; border-radius: 15px; border: 1px solid #ff4d6d; 
+            width: 85%; max-width: 700px; padding: 40px; border-radius: 15px; border: 1px solid #ff4d6d; 
             color: white; box-shadow: 0 0 50px rgba(255, 77, 109, 0.2); 
             text-align: left; cursor: default; position: relative;
         }
@@ -176,12 +175,13 @@
     <div id="tiup-lagi">Ayo tiup lagi...</div>
     <button class="btn-main" onclick="blowCandles()">Tiup Lilin</button>
 </div>
-<div id="reset-ui" class="overlay"><button class="btn-main" onclick="location.reload()">Ulangi Dari Awal</button></div>
+
+<div id="reset-ui" class="overlay"><button class="btn-main" onclick="checkReset()">Ulangi Dari Awal</button></div>
 
 <div id="instruction">Sentuh dan geser layar untuk memutar sudut pandang</div>
 
 <div id="top-notif" onclick="openNote(event)">
-    <i class="fas fa-envelope-open-text"></i> Pesan baru telah terbuka untukmu...
+    <i class="fas fa-envelope-open-text"></i> Ada pesan nih untuk kamu...
 </div>
 
 <div id="msg-bubble" onclick="openNote(event)">
@@ -191,15 +191,15 @@
 
 <div id="main-note-overlay" onclick="closeNote()">
     <div id="note-card" onclick="event.stopPropagation()">
-        <h2>Untukmu,akhir perjalanan ku</h2>
+        <h2>Untukmu, akhir perjalananku</h2>
         <p>
-            akhir perjalanan, akhirnya kamu telah berhasil membuat ku bertahan selama ini chel, kata kata mu dulu selalu ku ingat “jangan jauh-jauh yak, aku masih ingin berteman denganmu.” tetapi justru itu yang membuat ku berada dilema, Aku tahu kamu tahu bahwa kita hanya sekedar teman tetapi justru karena itu, semuanya terasa lebih berat. Aku bertahan di tengah. Di ruang yang tidak jelas arahnya. aku dilema antara kembali atau tetap bertarung memperjuangkan mu, bodoh nya aku, aku tetap terperangkap di sangkar mu ini,  walaupun aku sudah sering dinasehati “dia itu friendly kepada semua cowok jadi jangan berharap”,”dia itu memang keras kepala gak mungkin lah nurut kamu”,”dia itu berusaha menghindari kamu” tetapi entah kenapa aku merasa jika aku mundur sekarang “aku harus pergi kemana?” dan pada akhirnya
- aku selalu menunggumu, aku selalu mengharapkan waktu bersama mu itu terus menerus tetapi entah kenapa akhir akhir ini rasa nya sangat susah sekali, padahal kau pernah bilang kepada ku mau namatin dead rails tetapi, etah kenapa itu tidak selalu terwujud bahkan aku pun mulai bertanya tanya  “kapan mau main nya? aku hanya bisa senyum dan berbicara dalam hati tidak usah berharap lebih, aku sadar aku memang bukan siapa siapa mu tepi etah mengapa tanpa mu dunia ku terasa sepi. jika kamu tahu chel aku sangat merindu kamu yang dulu yang selalu bercanda tawa bersama ku, aku tahu aku tidak ada hak untuk mengaturku karena aku memang bukan siapa siapamu jadi. jika kamu memang merasa terganggu atas kehadiran ku chel, plis tolong katakan jangan membuat ku dilema seperti ini aku bingung aku sangat bingung, aku bingung bagaimana cara pulang, jika kamu memang tidak ingin main lagi bersama ku lagi gak usah pakai basa basi chel, bilang saja aku agar aku segera terbebas dari belenggu yang mengikat dari dulu.
-
+            akhir perjalanan, akhirnya kamu telah berhasil membuat ku bertahan selama ini chel, kata kata mu dulu selalu ku ingat “jangan jauh-jauh yak, aku masih ingin berteman denganmu.” masih teringat jelas di ingatan ku, tetapi kata kata itu juga yang membuat ku selalu bertanya "tapi kenapa sekarang kamu yang sering menghilang tiba tiba?" hal itu membuat ku berada dilema, Aku tahu kamu tahu bahwa kita hanya sekedar teman tetapi justru karena itu, semuanya terasa lebih berat. Aku bertahan di tengah. Di ruang yang tidak jelas arahnya. aku dilema antara kembali atau tetap bertarung memperjuangkan mu, bodoh nya aku, aku tetap terperangkap di sangkar mu ini,  walaupun aku sudah sering dinasehati “dia itu friendly kepada semua cowok jadi jangan berharap”,”dia itu memang keras kepala gak mungkin lah nurut kamu”,”dia itu berusaha menghindari kamu” tetapi entah kenapa aku merasa jika aku mundur sekarang “aku harus pergi kemana?” dan pada akhirnya aku selalu menunggumu.
+        </p>
+        <p>
+            aku selalu mengharapkan waktu bersama mu itu terus menerus tetapi entah kenapa akhir akhir ini rasa nya sangat susah sekali, padahal kau pernah bilang kepada ku mau namatin dead rails tetapi, entah kenapa itu tidak selalu terwujud bahkan aku pun mulai bertanya tanya “kapan mau main nya?" aku hanya bisa senyum dan berbicara dalam hati tidak usah berharap lebih, aku sadar aku memang bukan siapa siapa mu tepi etah mengapa tanpa mu dunia ku terasa sepi. jika kamu tahu chel aku sangat merindu kamu yang dulu yang selalu bercanda tawa bersama ku, aku tahu aku tidak ada hak untuk mengaturku karena aku memang bukan siapa siapamu jadi. jika kamu memang merasa terganggu atas kehadiran ku chel, plis tolong katakan jangan membuat ku dilema seperti ini aku bingung aku sangat bingung, aku bingung bagaimana cara pulang, jika kamu memang tidak ingin main lagi bersama ku lagi gak usah pakai basa basi chel, bilang saja aku agar aku segera terbebas dari belenggu yang mengikat dari dulu.
         </p>
         <p>
             terakhir aku ingin minta maaf untuk selama ini dan terimakasih sudah mau menjadi teman ku aku sudah sangat lelah chel aku ingin beristirahat untuk sementara waktu.
-
         </p>
         <div class="close-hint">Klik di mana saja untuk menutup pesan</div>
     </div>
@@ -231,6 +231,8 @@
     <audio id="bgm2" src="lagu.mp4" loop></audio>
 </div>
 
+<audio id="notif-sound" src="notif.mp3"></audio>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
@@ -252,6 +254,9 @@ let flameIndices = [];
 
 let isFinalMode = false; 
 const COLOR_RED_HEART = { r: 0.8, g: 0.0, b: 0.1 }; 
+
+// VARIABEL UNTUK MELACAK APAKAH PESAN SUDAH DIBACA
+let isMessageRead = false;
 
 // MUSIC PLAYER LOGIC
 const audio1 = document.getElementById('bgm1');
@@ -301,7 +306,6 @@ let notifTimeout;
 function triggerNotif() {
     const notif = document.getElementById('top-notif');
     notif.classList.add('show');
-    // Hilang otomatis dalam 6 detik
     notifTimeout = setTimeout(() => {
         notif.classList.remove('show');
     }, 6000);
@@ -309,10 +313,12 @@ function triggerNotif() {
 
 function openNote(e) {
     if(e) e.stopPropagation();
+    
+    isMessageRead = true; // Tandai pesan sudah dibaca
+    
     document.getElementById('main-note-overlay').style.display = 'flex';
     setTimeout(() => document.getElementById('main-note-overlay').style.opacity = '1', 10);
     
-    // Sembunyikan notif jika masih ada
     document.getElementById('top-notif').classList.remove('show');
     clearTimeout(notifTimeout);
 }
@@ -323,8 +329,24 @@ function closeNote() {
     setTimeout(() => modal.style.display = 'none', 500);
 }
 
+// FUNGSI CEK RESET SEBELUM MENGULANG
+function checkReset() {
+    if (!isMessageRead) {
+        // Jika belum dibaca, munculkan peringatan
+        alert("Ada pesan yang belum kamu baca loh!");
+        
+        // Buat efek animasi goyang sedikit di tombol surat agar menarik perhatian (opsional)
+        const bubble = document.getElementById('msg-bubble');
+        bubble.style.transform = 'scale(1.2)';
+        setTimeout(() => bubble.style.transform = 'scale(1)', 300);
+    } else {
+        // Jika sudah dibaca, ulangi dari awal secara normal
+        location.reload();
+    }
+}
+
 // ------------------------------------------------------------------
-// LOGIKA 3D (TIDAK ADA YANG DIUBAH, MURNI KODE ASLI KAMU)
+// LOGIKA 3D
 // ------------------------------------------------------------------
 function init3D() {
     scene = new THREE.Scene();
@@ -581,10 +603,9 @@ function blowCandles() {
         }
         particles.geometry.attributes.color.needsUpdate = true;
 
-        // -- GANTI LAGU & COVER --
         if(isPlaying) { audio1.pause(); audio1.currentTime = 0; }
         currentAudio = audio2;
-        document.getElementById('music-cover').src = "coverakhir.jpg"; // Ganti cover di sini
+        document.getElementById('music-cover').src = "coverakhir.jpg"; 
         document.getElementById('judul-lagu').innerText = "Bahagia Lagi";
         document.getElementById('artis-lagu').innerText = "Piche Kota";
         currentAudio.play().catch(e => console.log(e));
@@ -599,11 +620,6 @@ function blowCandles() {
             scene.fog.color.setHex(0x000000); 
             document.getElementById('music-player').classList.add('final-mode');
 
-            // TAMPILKAN BUBBLE DAN NOTIFIKASI
-            document.getElementById('msg-bubble').style.display = 'flex';
-            setTimeout(() => document.getElementById('msg-bubble').style.opacity = '1', 100);
-            triggerNotif();
-
             for(let i=0; i<particleCount*3; i++) currentPositions[i] = (Math.random() - 0.5) * 5000;
             particles.geometry.attributes.position.array.set(currentPositions);
             particles.geometry.attributes.position.needsUpdate = true;
@@ -611,10 +627,23 @@ function blowCandles() {
             setTimeout(() => textToParticles(`Sweet Seventeen ${userName}`, 1.2), 500);
             setTimeout(() => textToParticles("Semoga Sehat Selalu", 1.2), 6500);
 
+            // TAMPILKAN TOMBOL RESET, BUBBLE PESAN, DAN NOTIFIKASI BERSAMAAN DI AKHIR
             setTimeout(() => {
                 const resetBtn = document.getElementById('reset-ui');
                 resetBtn.style.display = 'block';
                 setTimeout(() => resetBtn.style.opacity = '1', 100);
+
+                document.getElementById('msg-bubble').style.display = 'flex';
+                setTimeout(() => document.getElementById('msg-bubble').style.opacity = '1', 100);
+                
+                // MEMAINKAN SUARA NOTIFIKASI
+                const notifAudio = document.getElementById('notif-sound');
+                if(notifAudio) {
+                    notifAudio.currentTime = 0;
+                    notifAudio.play().catch(e => console.log("Audio notifikasi diblokir browser: ", e));
+                }
+                
+                triggerNotif();
             }, 10000);
 
         }, 4500); 
